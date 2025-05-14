@@ -62,6 +62,42 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         echo "<p>Rata miesięczna: <strong>" . number_format($annuity, 2, ',', ' ') . " zł</strong></p>";
         echo "<p>Łączna kwota do spłaty: <strong>" . number_format($annuity * $months, 2, ',', ' ') . " zł</strong></p>";
         echo "</div>";
+
+        // Export for annuity
+        if (isset($_POST['export']) && $_POST['export'] === 'csv') {
+            $csvFile = fopen(__DIR__ . "/../exports/harmonogram_annuitet.csv", "w");
+            fputcsv($csvFile, ["Miesiąc", "Rata miesięczna"]);
+
+            for ($i = 1; $i <= $months; $i++) {
+                fputcsv($csvFile, [$i, number_format($annuity, 2, '.', '')]);
+            }
+
+            fputcsv($csvFile, []);
+            fputcsv($csvFile, ["Łączna kwota do spłaty", number_format($annuity * $months, 2, '.', '')]);
+
+            fclose($csvFile);
+
+            echo "<div class='alert alert-info'>Plik <strong>harmonogram_annuitet.csv</strong> został zapisany w katalogu aplikacji.</div>";
+            echo "<div class='mt-2 text-center'>";
+            echo "<a class='btn btn-outline-success' href='../exports/harmonogram_annuitet.csv' download>Pobierz plik CSV</a>";
+            echo "</div>";
+        } elseif ($_POST['export'] === 'txt') {
+            $txtFile = fopen(__DIR__ . "/../exports/harmonogram_annuitet.txt", "w");
+            fwrite($txtFile, "Harmonogram rat równych:\n\n");
+            fwrite($txtFile, "Miesiąc | Rata miesięczna\n");
+
+            for ($i = 1; $i <= $months; $i++) {
+                fwrite($txtFile, sprintf("%6d | %15.2f\n", $i, $annuity));
+            }
+
+            fwrite($txtFile, "\nŁączna kwota do spłaty: " . number_format($annuity * $months, 2, '.', '') . " zł\n");
+            fclose($txtFile);
+
+            echo "<div class='alert alert-info'>Plik <strong>harmonogram_annuitet.txt</strong> został zapisany w katalogu aplikacji.</div>";
+            echo "<div class='mt-2 text-center'>";
+            echo "<a class='btn btn-outline-success' href='../exports/harmonogram_annuitet.txt' download>Pobierz plik TXT</a>";
+            echo "</div>";
+        }
     } elseif ($type === 'decreasing') {
         echo "<div class='mt-4'>";
         echo "<h5 class='mb-3'>Harmonogram rat malejących:</h5>";
@@ -105,7 +141,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         echo "</div>";
 
         if (isset($_POST['export']) && $_POST['export'] === 'csv') {
-            $csvFile = fopen("../harmonogram_kredytu.csv", "w");
+            $csvFile = fopen(__DIR__ . "/../exports/harmonogram_kredytu.csv", "w");
             fputcsv($csvFile, ["Miesiąc", "Rata całkowita", "Kapitał", "Odsetki", "Saldo"]);
 
             $remaining = $amount;
@@ -129,8 +165,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             fclose($csvFile);
 
             echo "<div class='alert alert-info'>Plik <strong>harmonogram_kredytu.csv</strong> został zapisany w katalogu głównym aplikacji.</div>";
+            echo "<div class='mt-2 text-center'>";
+            echo "<a class='btn btn-outline-success' href='../exports/harmonogram_kredytu.csv' download>Pobierz plik CSV</a>";
+            echo "</div>";
         } elseif ($_POST['export'] === 'txt') {
-            $txtFile = fopen("../harmonogram_kredytu.txt", "w");
+            $txtFile = fopen(__DIR__ . "/../exports/harmonogram_kredytu.txt", "w");
             fwrite($txtFile, "Harmonogram rat malejących:\n\n");
             fwrite($txtFile, "Miesiąc | Rata całkowita | Kapitał | Odsetki | Saldo\n");
 
@@ -151,6 +190,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             fclose($txtFile);
 
             echo "<div class='alert alert-info'>Plik <strong>harmonogram_kredytu.txt</strong> został zapisany w katalogu głównym aplikacji.</div>";
+            echo "<div class='mt-2 text-center'>";
+            echo "<a class='btn btn-outline-success' href='../exports/harmonogram_kredytu.txt' download>Pobierz plik TXT</a>";
+            echo "</div>";
         }
     }
 }

@@ -1,0 +1,6 @@
+Kwota początkowa: 10 000,00 zł
+Oprocentowanie: 12,00 %
+Czas trwania: 12 lata
+Rodzaj odsetek: Procent prosty
+Zysk: 14 400,00 zł
+Kwota końcowa: 24 400,00 zł

@@ -58,6 +58,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         echo "<p>Zysk z inwestycji: <strong>" . number_format($profit, 2, ',', ' ') . " zł</strong></p>";
         echo "<p>Kwota końcowa: <strong>" . number_format($finalAmount, 2, ',', ' ') . " zł</strong></p>";
         echo "</div>";
+        echo "<div class='mt-4'>";
+        echo "<canvas id='investmentChart' height='100'></canvas>";
+        echo "</div>";
     } elseif ($type === 'compound') {
         $finalAmount = $amount * pow(1 + $rate / 100, $years);
         $profit = $finalAmount - $amount;
@@ -65,6 +68,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         echo "<h5 class='mb-3'>Procent składany:</h5>";
         echo "<p>Zysk z inwestycji: <strong>" . number_format($profit, 2, ',', ' ') . " zł</strong></p>";
         echo "<p>Kwota końcowa: <strong>" . number_format($finalAmount, 2, ',', ' ') . " zł</strong></p>";
+        echo "</div>";
+        echo "<div class='mt-4'>";
+        echo "<canvas id='investmentChart' height='100'></canvas>";
         echo "</div>";
     }
 
@@ -80,22 +86,63 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         ];
 
         if ($export === 'csv') {
-            $file = fopen("../wynik_inwestycji.csv", "w");
+            $file = fopen(__DIR__ . "/../exports/wynik_inwestycji.csv", "w");
             fputcsv($file, ['Kwota początkowa', 'Oprocentowanie (%)', 'Lata', 'Rodzaj', 'Zysk', 'Kwota końcowa']);
             fputcsv($file, [$amount, $rate, $years, $type, $profit, $finalAmount]);
             fclose($file);
             echo "<div class='alert alert-info'>Wynik został zapisany do pliku <strong>wynik_inwestycji.csv</strong>.</div>";
+            echo "<div class='mt-2 text-center'>";
+            echo "<a class='btn btn-outline-success' href='../exports/wynik_inwestycji.csv' download>Pobierz plik CSV</a>";
+            echo "</div>";
         } elseif ($export === 'txt') {
-            $file = fopen("../wynik_inwestycji.txt", "w");
+            $file = fopen(__DIR__ . "/../exports/wynik_inwestycji.txt", "w");
             foreach ($lines as $line) {
                 fwrite($file, $line . PHP_EOL);
             }
             fclose($file);
             echo "<div class='alert alert-info'>Wynik został zapisany do pliku <strong>wynik_inwestycji.txt</strong>.</div>";
+            echo "<div class='mt-2 text-center'>";
+            echo "<a class='btn btn-outline-success' href='../exports/wynik_inwestycji.txt' download>Pobierz plik TXT</a>";
+            echo "</div>";
         }
     }
 }
 ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('investmentChart')?.getContext('2d');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Kwota początkowa', 'Zysk', 'Kwota końcowa'],
+        datasets: [{
+          label: 'Wartości inwestycji (zł)',
+          data: [<?= round($amount, 2) ?>, <?= round($profit, 2) ?>, <?= round($finalAmount, 2) ?>],
+          backgroundColor: ['#6c757d', '#0d6efd', '#198754']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: 'Wynik inwestycji'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: value => value.toLocaleString('pl-PL') + ' zł'
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
 <?php
 include('../footer.php');
 ?>

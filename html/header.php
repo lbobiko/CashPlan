@@ -29,6 +29,9 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
           <a class="nav-link <?php if ($currentPage == 'inwestycje.php') echo 'active'; ?>" href="/kalkulatory/inwestycje.php">Kalkulator inwestycji</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link <?php if ($currentPage == 'porownanie.php') echo 'active'; ?>" href="/kalkulatory/porownanie.php">Porównanie ofert</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link <?php if ($currentPage == 'autorzy.php') echo 'active'; ?>" href="/autorzy.php">Autorzy</a>
         </li>
       </ul>
@@ -40,3 +43,6 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
     <header class="bg-primary text-white text-center py-4">
         <h1>Kalkulator Finansowy</h1>
     </header>
+    <div class="bg-light text-center py-2 border-top border-bottom">
+      <p class="mb-0 text-muted">Planowanie finansów w prosty sposób</p>
+    </div>
