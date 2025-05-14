@@ -4,7 +4,7 @@
     <div class="col-md-6 offset-md-3 text-center">
         <p class="lead">Wybierz kalkulator, z którego chcesz skorzystać:</p>
         <a href="/kalkulatory/kredyt.php" class="btn btn-outline-primary btn-lg my-2 w-100">Kalkulator rat kredytu</a>
-        <a href="#" class="btn btn-outline-secondary btn-lg my-2 w-100 disabled">Kalkulator inwestycji (wkrótce)</a>
+        <a href="/kalkulatory/inwestycje.php" class="btn btn-outline-success btn-lg my-2 w-100">Kalkulator inwestycji</a>
     </div>
 </div>
 
