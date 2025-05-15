@@ -3,29 +3,30 @@
 <h2 class="text-center my-4">Porównanie dwóch kredytów</h2>
 
 <form method="post" action="">
+  <div class="mb-3 text-center">
+    <label for="offersCount" class="form-label">Ile ofert chcesz porównać?</label>
+    <select class="form-select w-auto d-inline-block" name="offersCount" id="offersCount" onchange="this.form.submit()">
+      <?php for ($o = 2; $o <= 4; $o++): ?>
+        <option value="<?= $o ?>" <?= (isset($_POST['offersCount']) && $_POST['offersCount'] == $o) ? 'selected' : '' ?>><?= $o ?></option>
+      <?php endfor; ?>
+    </select>
+  </div>
   <div class="row mb-4">
-    <div class="col-md-6">
-      <h5>Kredyt 1</h5>
-      <label for="amount1" class="form-label">Kwota (zł):</label>
-      <input type="number" step="0.01" class="form-control" name="amount1" id="amount1" required>
+    <?php
+    $offersCount = isset($_POST['offersCount']) ? (int)$_POST['offersCount'] : 2;
+    for ($i = 1; $i <= $offersCount; $i++): ?>
+      <div class="col-md-6" id="offer<?= $i ?>">
+        <h5>Kredyt <?= $i ?></h5>
+        <label class="form-label" for="amount<?= $i ?>">Kwota (zł):</label>
+        <input type="number" step="0.01" class="form-control" name="amount<?= $i ?>" id="amount<?= $i ?>" required>
 
-      <label for="interest1" class="form-label mt-2">Oprocentowanie roczne (%):</label>
-      <input type="number" step="0.01" class="form-control" name="interest1" id="interest1" required>
+        <label class="form-label mt-2" for="interest<?= $i ?>">Oprocentowanie roczne (%):</label>
+        <input type="number" step="0.01" class="form-control" name="interest<?= $i ?>" id="interest<?= $i ?>" required>
 
-      <label for="months1" class="form-label mt-2">Liczba miesięcy:</label>
-      <input type="number" class="form-control" name="months1" id="months1" required>
-    </div>
-    <div class="col-md-6">
-      <h5>Kredyt 2</h5>
-      <label for="amount2" class="form-label">Kwota (zł):</label>
-      <input type="number" step="0.01" class="form-control" name="amount2" id="amount2" required>
-
-      <label for="interest2" class="form-label mt-2">Oprocentowanie roczne (%):</label>
-      <input type="number" step="0.01" class="form-control" name="interest2" id="interest2" required>
-
-      <label for="months2" class="form-label mt-2">Liczba miesięcy:</label>
-      <input type="number" class="form-control" name="months2" id="months2" required>
-    </div>
+        <label class="form-label mt-2" for="months<?= $i ?>">Liczba miesięcy:</label>
+        <input type="number" class="form-control" name="months<?= $i ?>" id="months<?= $i ?>" required>
+      </div>
+    <?php endfor; ?>
   </div>
   <!-- Export select input -->
   <div class="row mb-3">
@@ -41,17 +42,35 @@
   <div class="text-center">
     <button type="submit" class="btn btn-primary">Porównaj</button>
   </div>
+<!-- End of form -->
 </form>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const select = document.getElementById("offersCount");
+    const updateForm = () => {
+      const count = parseInt(select.value);
+      for (let i = 1; i <= 4; i++) {
+        const container = document.getElementById(`offer${i}`);
+        if (!container) continue;
+        const inputs = container.querySelectorAll("input");
+        if (i <= count) {
+          container.style.display = "block";
+          inputs.forEach(el => el.required = true);
+        } else {
+          container.style.display = "none";
+          inputs.forEach(el => el.required = false);
+        }
+      }
+    };
+    select.addEventListener("change", updateForm);
+    updateForm(); // initialize on load
+  });
+</script>
 
 <?php
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-  $amount1 = (float) $_POST['amount1'];
-  $interest1 = (float) $_POST['interest1'];
-  $months1 = (int) $_POST['months1'];
-
-  $amount2 = (float) $_POST['amount2'];
-  $interest2 = (float) $_POST['interest2'];
-  $months2 = (int) $_POST['months2'];
+  $offersCount = isset($_POST['offersCount']) ? (int)$_POST['offersCount'] : 2;
 
   function calculateAnnuity($amount, $interest, $months) {
     $monthlyRate = $interest / 12 / 100;
@@ -62,31 +81,64 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
   }
 
-  $rata1 = calculateAnnuity($amount1, $interest1, $months1);
-  $suma1 = $rata1 * $months1;
-
-  $rata2 = calculateAnnuity($amount2, $interest2, $months2);
-  $suma2 = $rata2 * $months2;
+  $rates = [];
+  $totals = [];
+  $labels = [];
+  $summaryLines = [];
 
   echo "<div class='row mt-4'>";
-  echo "<div class='col-md-6'><div class='alert alert-secondary'><h5>Kredyt 1</h5>";
-  echo "<p>Rata miesięczna: <strong>" . number_format($rata1, 2, ',', ' ') . " zł</strong></p>";
-  echo "<p>Łączna kwota do spłaty: <strong>" . number_format($suma1, 2, ',', ' ') . " zł</strong></p></div></div>";
+  for ($i = 1; $i <= $offersCount; $i++) {
+    $amountKey = "amount$i";
+    $interestKey = "interest$i";
+    $monthsKey = "months$i";
 
-  echo "<div class='col-md-6'><div class='alert alert-secondary'><h5>Kredyt 2</h5>";
-  echo "<p>Rata miesięczna: <strong>" . number_format($rata2, 2, ',', ' ') . " zł</strong></p>";
-  echo "<p>Łączna kwota do spłaty: <strong>" . number_format($suma2, 2, ',', ' ') . " zł</strong></p></div></div>";
-  echo "</div>";
+    if (
+      !isset($_POST[$amountKey], $_POST[$interestKey], $_POST[$monthsKey]) ||
+      $_POST[$amountKey] === '' || $_POST[$monthsKey] === ''
+    ) {
+      echo "<div class='alert alert-danger'>Błąd: Nieprawidłowe dane dla Kredytu $i. Upewnij się, że wszystkie pola są wypełnione.</div>";
+      continue;
+    }
 
-  echo "<div class='alert alert-info text-center mt-3'>";
-  if ($suma1 < $suma2) {
-    echo "Kredyt 1 jest korzystniejszy o <strong>" . number_format($suma2 - $suma1, 2, ',', ' ') . " zł</strong>.";
-  } elseif ($suma2 < $suma1) {
-    echo "Kredyt 2 jest korzystniejszy o <strong>" . number_format($suma1 - $suma2, 2, ',', ' ') . " zł</strong>.";
-  } else {
-    echo "Obie oferty są identyczne pod względem całkowitej spłaty.";
+    $amount = (float) $_POST[$amountKey];
+    $interest = (float) $_POST[$interestKey];
+    $months = (int) $_POST[$monthsKey];
+
+    if ($amount <= 0 || $months <= 0) {
+      echo "<div class='alert alert-danger'>Błąd: Nieprawidłowe dane dla Kredytu $i. Upewnij się, że kwota i liczba miesięcy są większe od zera.</div>";
+      continue;
+    }
+    $rate = calculateAnnuity($amount, $interest, $months);
+    $total = $rate * $months;
+
+    $rates[$i] = $rate;
+    $totals[$i] = $total;
+    $labels[$i] = "Kredyt $i";
+
+    echo "<div class='col-md-6'><div class='alert alert-secondary'><h5>Kredyt $i</h5>";
+    echo "<p>Rata miesięczna: <strong>" . number_format($rate, 2, ',', ' ') . " zł</strong></p>";
+    echo "<p>Łączna kwota do spłaty: <strong>" . number_format($total, 2, ',', ' ') . " zł</strong></p></div></div>";
+
+    $summaryLines[] = "Kredyt $i:";
+    $summaryLines[] = "Kwota: " . number_format($amount, 2, ',', ' ') . " zł";
+    $summaryLines[] = "Oprocentowanie: " . number_format($interest, 2, ',', ' ') . " %";
+    $summaryLines[] = "Okres: $months miesięcy";
+    $summaryLines[] = "Rata miesięczna: " . number_format($rate, 2, ',', ' ') . " zł";
+    $summaryLines[] = "Suma spłat: " . number_format($total, 2, ',', ' ') . " zł";
+    $summaryLines[] = "";
   }
   echo "</div>";
+
+  if (empty($totals)) {
+    echo "<div class='alert alert-warning text-center'>Brak poprawnych danych do porównania.</div>";
+    return;
+  }
+
+  $minKey = array_keys($totals, min($totals))[0];
+  $minValue = $totals[$minKey];
+  $summaryText = "Najkorzystniejszy jest <strong>Kredyt $minKey</strong> o łącznym koszcie " . number_format($minValue, 2, ',', ' ') . " zł.";
+
+  echo "<div class='alert alert-info text-center mt-3'>$summaryText</div>";
   echo "<div class='mt-4'>";
   echo "<canvas id='comparisonChart' height='100'></canvas>";
   echo "</div>";
@@ -94,33 +146,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   // Export logic
   if (!empty($_POST['export'])) {
     $export = $_POST['export'];
-    $lines = [
-      "Kredyt 1:",
-      "Kwota: " . number_format($amount1, 2, ',', ' ') . " zł",
-      "Oprocentowanie: " . number_format($interest1, 2, ',', ' ') . " %",
-      "Okres: $months1 miesięcy",
-      "Rata miesięczna: " . number_format($rata1, 2, ',', ' ') . " zł",
-      "Suma spłat: " . number_format($suma1, 2, ',', ' ') . " zł",
-      "",
-      "Kredyt 2:",
-      "Kwota: " . number_format($amount2, 2, ',', ' ') . " zł",
-      "Oprocentowanie: " . number_format($interest2, 2, ',', ' ') . " %",
-      "Okres: $months2 miesięcy",
-      "Rata miesięczna: " . number_format($rata2, 2, ',', ' ') . " zł",
-      "Suma spłat: " . number_format($suma2, 2, ',', ' ') . " zł",
-    ];
 
-    $summary = "";
-    if ($suma1 < $suma2) {
-      $summary = "Kredyt 1 jest korzystniejszy o " . number_format($suma2 - $suma1, 2, ',', ' ') . " zł.";
-    } elseif ($suma2 < $suma1) {
-      $summary = "Kredyt 2 jest korzystniejszy o " . number_format($suma1 - $suma2, 2, ',', ' ') . " zł.";
-    } else {
-      $summary = "Obie oferty są identyczne pod względem całkowitej spłaty.";
-    }
+    $lines = $summaryLines;
 
     $lines[] = "";
-    $lines[] = "Wniosek: " . $summary;
+    $lines[] = "Wniosek: " . strip_tags($summaryText);
 
     if ($export === 'txt') {
       file_put_contents('../exports/porownanie_kredytow.txt', implode(PHP_EOL, $lines));
@@ -131,10 +161,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } elseif ($export === 'csv') {
       $csv = fopen('../exports/porownanie_kredytow.csv', 'w');
       fputcsv($csv, ['Oferta', 'Kwota', 'Oprocentowanie', 'Okres', 'Rata', 'Suma']);
-      fputcsv($csv, ['Kredyt 1', $amount1, $interest1, $months1, round($rata1, 2), round($suma1, 2)]);
-      fputcsv($csv, ['Kredyt 2', $amount2, $interest2, $months2, round($rata2, 2), round($suma2, 2)]);
+      for ($i = 1; $i <= $offersCount; $i++) {
+        $amount = (float) $_POST["amount$i"];
+        $interest = (float) $_POST["interest$i"];
+        $months = (int) $_POST["months$i"];
+        fputcsv($csv, [
+          "Kredyt $i",
+          $amount,
+          $interest,
+          $months,
+          round($rates[$i], 2),
+          round($totals[$i], 2)
+        ]);
+      }
       fputcsv($csv, []);
-      fputcsv($csv, ['Wniosek', $summary]);
+      fputcsv($csv, ['Wniosek', strip_tags($summaryText)]);
       fclose($csv);
       echo "<div class='alert alert-info mt-3'>Plik <strong>porownanie_kredytow.csv</strong> został zapisany.</div>";
       echo "<div class='mt-2 text-center'>";
@@ -148,34 +189,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <?php if ($_SERVER["REQUEST_METHOD"] === "POST") : ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const ctx = document.getElementById('comparisonChart').getContext('2d');
-  const comparisonChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['Kredyt 1', 'Kredyt 2'],
-      datasets: [{
-        label: 'Kwota całkowita do spłaty (zł)',
-        data: [<?= round($suma1, 2) ?>, <?= round($suma2, 2) ?>],
-        backgroundColor: ['#0d6efd', '#6c757d']
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        title: {
-          display: true,
-          text: 'Porównanie całkowitych kosztów kredytu'
-        }
+  const ctx = document.getElementById('comparisonChart')?.getContext('2d');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: <?= json_encode(array_values($labels)) ?>,
+        datasets: [{
+          label: 'Kwota całkowita do spłaty (zł)',
+          data: <?= json_encode(array_values(array_map(fn($v) => round($v, 2), $totals))) ?>,
+          backgroundColor: ['#0d6efd', '#6c757d', '#198754', '#dc3545']
+        }]
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { callback: value => value.toLocaleString('pl-PL') + ' zł' }
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: 'Porównanie całkowitych kosztów kredytu'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: value => value.toLocaleString('pl-PL') + ' zł' }
+          }
         }
       }
-    }
-  });
+    });
+  }
 </script>
 <?php endif; ?>
 <?php include('../footer.php'); ?>
