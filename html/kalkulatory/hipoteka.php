@@ -159,6 +159,39 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     echo "</div>";
   }
 
+  // --- Generowanie PDF z podsumowaniem kredytu ---
+  require_once(__DIR__ . '/../fpdf/fpdf.php');
+
+  $pdf = new FPDF();
+  $pdf->AddPage();
+  $pdf->SetFont('Arial', 'B', 16);
+  $pdf->Cell(0, 10, 'Podsumowanie kredytu hipotecznego', 0, 1, 'C');
+  $pdf->Ln(5);
+  $pdf->SetFont('Arial', '', 12);
+
+  $pdf->Cell(0, 8, 'Kwota kredytu: ' . number_format($loanAmount, 2, ',', ' ') . ' zl', 0, 1);
+  $pdf->Cell(0, 8, 'Okres: ' . $months . ' miesiecy', 0, 1);
+  $pdf->Cell(0, 8, 'Oprocentowanie: ' . number_format($interest, 2, ',', ' ') . ' %', 0, 1);
+  if ($insurance > 0) {
+    $pdf->Cell(0, 8, 'Ubezpieczenie: ' . number_format($insurance, 2, ',', ' ') . ' zl', 0, 1);
+  }
+
+  if ($type === 'annuity') {
+    $pdf->Cell(0, 8, 'Rata miesieczna (rowna): ' . number_format($payment, 2, ',', ' ') . ' zl', 0, 1);
+  } else {
+    $pdf->Cell(0, 8, 'Typ rat: malejace', 0, 1);
+  }
+
+  $pdf->Cell(0, 8, 'Calkowity koszt: ' . number_format($total, 2, ',', ' ') . ' zl', 0, 1);
+
+  $pdfPath = __DIR__ . '/../exports/hipoteka_podsumowanie.pdf';
+  $pdf->Output('F', $pdfPath);
+
+  // Dodaj link do pobrania PDF
+  echo "<div class='mt-3 text-center'>";
+  echo "<a class='btn btn-outline-primary' href='../exports/hipoteka_podsumowanie.pdf' download>Pobierz PDF</a>";
+  echo "</div>";
+
   echo "</div></div>";
 }
 ?>
