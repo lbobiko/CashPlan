@@ -1,0 +1,25 @@
+Kredyt 1:
+Kwota: 10 000,00 zł
+Oprocentowanie: 12,00 %
+Okres: 12 miesięcy
+Rodzaj rat: równe
+Rata miesięczna: 888,49 zł
+Suma spłat: 10 661,85 zł
+
+Kredyt 2:
+Kwota: 10 000,00 zł
+Oprocentowanie: 10,00 %
+Okres: 16 miesięcy
+Rodzaj rat: równe
+Rata miesięczna: 670,19 zł
+Suma spłat: 10 723,02 zł
+
+Kredyt 3:
+Kwota: 10 000,00 zł
+Oprocentowanie: 12,00 %
+Okres: 12 miesięcy
+Rodzaj rat: malejące
+Suma spłat: 10 650,00 zł
+
+
+Wniosek: Najkorzystniejszy jest Kredyt 3 o łącznym koszcie 10 650,00 zł.

@@ -20,16 +20,19 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link <?php if ($currentPage == 'index.php') echo 'active'; ?>" href="/index.php">Strona główna</a>
+          <a class="nav-link <?php if ($currentPage == 'index.php') echo 'active'; ?>" href="/index.php">Start</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?php if ($currentPage == 'kredyt.php') echo 'active'; ?>" href="/kalkulatory/kredyt.php">Kalkulator rat</a>
+          <a class="nav-link <?php if ($currentPage == 'kredyt.php') echo 'active'; ?>" href="/kalkulatory/kredyt.php">Raty</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?php if ($currentPage == 'inwestycje.php') echo 'active'; ?>" href="/kalkulatory/inwestycje.php">Kalkulator inwestycji</a>
+          <a class="nav-link <?php if ($currentPage == 'hipoteka.php') echo 'active'; ?>" href="/kalkulatory/hipoteka.php">Hipoteka</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?php if ($currentPage == 'porownanie.php') echo 'active'; ?>" href="/kalkulatory/porownanie.php">Porównanie ofert</a>
+          <a class="nav-link <?php if ($currentPage == 'inwestycje.php') echo 'active'; ?>" href="/kalkulatory/inwestycje.php">Inwestycje</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <?php if ($currentPage == 'porownanie.php') echo 'active'; ?>" href="/kalkulatory/porownanie.php">Porównanie</a>
         </li>
         <li class="nav-item">
           <a class="nav-link <?php if ($currentPage == 'autorzy.php') echo 'active'; ?>" href="/autorzy.php">Autorzy</a>

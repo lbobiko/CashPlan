@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         echo "<p>Łączna kwota do spłaty: <strong>" . number_format($annuity * $months, 2, ',', ' ') . " zł</strong></p>";
         echo "</div>";
 
-        // Export for annuity
+        // Eksport harmonogramu dla rat równych
         if (isset($_POST['export']) && $_POST['export'] === 'csv') {
             $csvFile = fopen(__DIR__ . "/../exports/harmonogram_annuitet.csv", "w");
             fputcsv($csvFile, ["Miesiąc", "Rata miesięczna"]);
@@ -140,6 +140,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         echo "</div>";
         echo "</div>";
 
+        // Eksport harmonogramu dla rat malejących
         if (isset($_POST['export']) && $_POST['export'] === 'csv') {
             $csvFile = fopen(__DIR__ . "/../exports/harmonogram_kredytu.csv", "w");
             fputcsv($csvFile, ["Miesiąc", "Rata całkowita", "Kapitał", "Odsetki", "Saldo"]);
@@ -165,6 +166,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             fclose($csvFile);
 
             echo "<div class='alert alert-info'>Plik <strong>harmonogram_kredytu.csv</strong> został zapisany w katalogu głównym aplikacji.</div>";
+            // Link do pobrania pliku
             echo "<div class='mt-2 text-center'>";
             echo "<a class='btn btn-outline-success' href='../exports/harmonogram_kredytu.csv' download>Pobierz plik CSV</a>";
             echo "</div>";

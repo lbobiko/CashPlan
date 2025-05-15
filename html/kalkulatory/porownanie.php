@@ -1,6 +1,6 @@
 <?php include('../header.php'); ?>
 
-<h2 class="text-center my-4">Porównanie dwóch kredytów</h2>
+<h2 class="text-center my-4">Porównywarka kredytów</h2>
 
 <form method="post" action="">
   <div class="mb-3 text-center">
@@ -25,10 +25,16 @@
 
         <label class="form-label mt-2" for="months<?= $i ?>">Liczba miesięcy:</label>
         <input type="number" class="form-control" name="months<?= $i ?>" id="months<?= $i ?>" required>
+
+        <label class="form-label mt-2" for="type<?= $i ?>">Rodzaj rat:</label>
+        <select class="form-select" name="type<?= $i ?>" id="type<?= $i ?>">
+          <option value="annuity">Równe</option>
+          <option value="declining">Malejące</option>
+        </select>
       </div>
     <?php endfor; ?>
   </div>
-  <!-- Export select input -->
+  <!-- Wybór formatu eksportu -->
   <div class="row mb-3">
     <div class="col-md-6 offset-md-3">
       <label for="export" class="form-label">Zapisz porównanie do pliku:</label>
@@ -64,7 +70,7 @@
       }
     };
     select.addEventListener("change", updateForm);
-    updateForm(); // initialize on load
+    updateForm(); // inicjalizacja przy ładowaniu strony
   });
 </script>
 
@@ -81,6 +87,59 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
   }
 
+  // Generowanie harmonogramu dla rat równych
+  function generateAnnuitySchedule($amount, $interest, $months, $rate) {
+    $schedule = [];
+    $remaining = $amount;
+    for ($i = 1; $i <= $months; $i++) {
+      $interestPart = ($remaining * $interest / 100) / 12;
+      $capitalPart = $rate - $interestPart;
+      $schedule[] = [
+        'month' => $i,
+        'payment' => round($rate, 2),
+        'capital' => round($capitalPart, 2),
+        'interest' => round($interestPart, 2),
+        'remaining' => round($remaining, 2)
+      ];
+      $remaining -= $capitalPart;
+    }
+    return $schedule;
+  }
+
+  function calculateDecliningTotal($amount, $interest, $months) {
+    $capitalPart = $amount / $months;
+    $total = 0;
+    $remaining = $amount;
+    for ($i = 1; $i <= $months; $i++) {
+      $interestPart = ($remaining * $interest / 100) / 12;
+      $payment = $capitalPart + $interestPart;
+      $total += $payment;
+      $remaining -= $capitalPart;
+    }
+    return $total;
+  }
+
+  function generateDecliningSchedule($amount, $interest, $months) {
+    $schedule = [];
+    $capitalPart = $amount / $months;
+    $remaining = $amount;
+
+    for ($i = 1; $i <= $months; $i++) {
+      $interestPart = ($remaining * $interest / 100) / 12;
+      $payment = $capitalPart + $interestPart;
+      $schedule[] = [
+        'month' => $i,
+        'payment' => round($payment, 2),
+        'capital' => round($capitalPart, 2),
+        'interest' => round($interestPart, 2),
+        'remaining' => round($remaining, 2)
+      ];
+      $remaining -= $capitalPart;
+    }
+
+    return $schedule;
+  }
+
   $rates = [];
   $totals = [];
   $labels = [];
@@ -91,6 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $amountKey = "amount$i";
     $interestKey = "interest$i";
     $monthsKey = "months$i";
+    $typeKey = "type$i";
 
     if (
       !isset($_POST[$amountKey], $_POST[$interestKey], $_POST[$monthsKey]) ||
@@ -103,27 +163,54 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $amount = (float) $_POST[$amountKey];
     $interest = (float) $_POST[$interestKey];
     $months = (int) $_POST[$monthsKey];
+    $type = $_POST[$typeKey] ?? 'annuity';
 
     if ($amount <= 0 || $months <= 0) {
       echo "<div class='alert alert-danger'>Błąd: Nieprawidłowe dane dla Kredytu $i. Upewnij się, że kwota i liczba miesięcy są większe od zera.</div>";
       continue;
     }
-    $rate = calculateAnnuity($amount, $interest, $months);
-    $total = $rate * $months;
+
+    if ($type === 'declining') {
+      $rate = null;
+      $schedule = generateDecliningSchedule($amount, $interest, $months);
+      $total = array_sum(array_column($schedule, 'payment'));
+    } else {
+      $rate = calculateAnnuity($amount, $interest, $months);
+      $total = $rate * $months;
+      // Generowanie harmonogramu rat równych
+      $schedule = generateAnnuitySchedule($amount, $interest, $months, $rate);
+    }
 
     $rates[$i] = $rate;
     $totals[$i] = $total;
     $labels[$i] = "Kredyt $i";
 
-    echo "<div class='col-md-6'><div class='alert alert-secondary'><h5>Kredyt $i</h5>";
-    echo "<p>Rata miesięczna: <strong>" . number_format($rate, 2, ',', ' ') . " zł</strong></p>";
-    echo "<p>Łączna kwota do spłaty: <strong>" . number_format($total, 2, ',', ' ') . " zł</strong></p></div></div>";
+    echo "<div class='col-md-6'><div class='alert alert-secondary'>";
+    echo "<h5>Kredyt $i (" . ($type === 'declining' ? "malejące" : "równe") . ")</h5>";
+    if ($rate !== null) {
+      echo "<p>Rata miesięczna: <strong>" . number_format($rate, 2, ',', ' ') . " zł</strong></p>";
+    }
+    echo "<p>Łączna kwota do spłaty: <strong>" . number_format($total, 2, ',', ' ') . " zł</strong></p></div>";
+
+    if (!empty($schedule)) {
+      echo "<div class='table-responsive'><table class='table table-sm table-bordered mt-3'>";
+      echo "<thead><tr><th>Miesiąc</th><th>Rata</th><th>Kapitał</th><th>Odsetki</th><th>Pozostało</th></tr></thead><tbody>";
+      foreach ($schedule as $row) {
+        echo "<tr><td>{$row['month']}</td><td>{$row['payment']} zł</td><td>{$row['capital']} zł</td><td>{$row['interest']} zł</td><td>{$row['remaining']} zł</td></tr>";
+      }
+      echo "</tbody></table></div>";
+    }
+
+    echo "</div>";
 
     $summaryLines[] = "Kredyt $i:";
     $summaryLines[] = "Kwota: " . number_format($amount, 2, ',', ' ') . " zł";
     $summaryLines[] = "Oprocentowanie: " . number_format($interest, 2, ',', ' ') . " %";
     $summaryLines[] = "Okres: $months miesięcy";
-    $summaryLines[] = "Rata miesięczna: " . number_format($rate, 2, ',', ' ') . " zł";
+    $summaryLines[] = "Rodzaj rat: " . ($type === 'declining' ? 'malejące' : 'równe');
+    if ($rate !== null) {
+      $summaryLines[] = "Rata miesięczna: " . number_format($rate, 2, ',', ' ') . " zł";
+    }
     $summaryLines[] = "Suma spłat: " . number_format($total, 2, ',', ' ') . " zł";
     $summaryLines[] = "";
   }
@@ -143,7 +230,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   echo "<canvas id='comparisonChart' height='100'></canvas>";
   echo "</div>";
 
-  // Export logic
+  // Eksport porównania do pliku
   if (!empty($_POST['export'])) {
     $export = $_POST['export'];
 
@@ -160,17 +247,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       echo "</div>";
     } elseif ($export === 'csv') {
       $csv = fopen('../exports/porownanie_kredytow.csv', 'w');
-      fputcsv($csv, ['Oferta', 'Kwota', 'Oprocentowanie', 'Okres', 'Rata', 'Suma']);
+      fputcsv($csv, ['Oferta', 'Kwota', 'Oprocentowanie', 'Okres', 'Typ rat', 'Rata', 'Suma']);
       for ($i = 1; $i <= $offersCount; $i++) {
         $amount = (float) $_POST["amount$i"];
         $interest = (float) $_POST["interest$i"];
         $months = (int) $_POST["months$i"];
+        $type = $_POST["type$i"] ?? 'annuity';
         fputcsv($csv, [
           "Kredyt $i",
           $amount,
           $interest,
           $months,
-          round($rates[$i], 2),
+          $type,
+          $rates[$i] ?? '',
           round($totals[$i], 2)
         ]);
       }
@@ -187,6 +276,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 ?>
 
 <?php if ($_SERVER["REQUEST_METHOD"] === "POST") : ?>
+<!-- Renderowanie wykresu Chart.js po przesłaniu formularza -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   const ctx = document.getElementById('comparisonChart')?.getContext('2d');

@@ -7,6 +7,7 @@
         <a href="/kalkulatory/kredyt.php" class="btn btn-outline-primary btn-lg my-2 w-100">Kalkulator rat kredytu</a>
         <a href="/kalkulatory/inwestycje.php" class="btn btn-outline-success btn-lg my-2 w-100">Kalkulator inwestycji</a>
         <a href="/kalkulatory/porownanie.php" class="btn btn-outline-warning btn-lg my-2 w-100">Porównywarka kredytów</a>
+        <a href="/kalkulatory/hipoteka.php" class="btn btn-outline-dark btn-lg my-2 w-100">Kalkulator hipoteki</a>
     </div>
 </div>
 
