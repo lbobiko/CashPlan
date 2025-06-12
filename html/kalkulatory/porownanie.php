@@ -1,35 +1,37 @@
 <?php include('../header.php'); ?>
-
-<h2 class="text-center my-4">Porównywarka kredytów</h2>
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&display=swap" rel="stylesheet">
+</head>
+<h2 class="text-center my-4" style="font-family: 'Oswald', serif; font-size: 4rem;">Porównywarka kredytów</h2>
 
 <form method="post" action="">
   <div class="mb-3 text-center">
-    <label for="offersCount" class="form-label">Ile ofert chcesz porównać?</label>
-    <select class="form-select w-auto d-inline-block" name="offersCount" id="offersCount" onchange="this.form.submit()">
+    <label for="liczba_ofert" class="form-label" style="font-family: 'Oswald', serif; font-size: 1rem;">Ile ofert chcesz porównać?</label>
+    <select class="form-select w-auto d-inline-block" name="liczba_ofert" id="liczba_ofert" onchange="this.form.submit()">
       <?php for ($o = 2; $o <= 4; $o++): ?>
-        <option value="<?= $o ?>" <?= (isset($_POST['offersCount']) && $_POST['offersCount'] == $o) ? 'selected' : '' ?>><?= $o ?></option>
+        <option value="<?= $o ?>" <?= (isset($_POST['liczba_ofert']) && $_POST['liczba_ofert'] == $o) ? 'selected' : '' ?>><?= $o ?></option>
       <?php endfor; ?>
     </select>
   </div>
   <div class="row mb-4">
     <?php
-    $offersCount = isset($_POST['offersCount']) ? (int)$_POST['offersCount'] : 2;
-    for ($i = 1; $i <= $offersCount; $i++): ?>
-      <div class="col-md-6" id="offer<?= $i ?>">
-        <h5>Kredyt <?= $i ?></h5>
-        <label class="form-label" for="amount<?= $i ?>">Kwota (zł):</label>
-        <input type="number" step="0.01" class="form-control" name="amount<?= $i ?>" id="amount<?= $i ?>" required>
+    $liczba_ofert = isset($_POST['liczba_ofert']) ? (int)$_POST['liczba_ofert'] : 2;
+    for ($i = 1; $i <= $liczba_ofert; $i++): ?>
+      <div class="col-md-6" id="oferta<?= $i ?>">
+        <h5 style="font-family: 'Oswald', serif; font-size: 2rem;">Kredyt <?= $i ?></h5>
+        <label class="form-label" style="font-family: 'Oswald', serif; font-size: 1.5rem;" for="kwota<?= $i ?>">Kwota (zł):</label>
+        <input type="number" step="0.01" class="form-control" name="kwota<?= $i ?>" id="kwota<?= $i ?>" required>
 
-        <label class="form-label mt-2" for="interest<?= $i ?>">Oprocentowanie roczne (%):</label>
-        <input type="number" step="0.01" class="form-control" name="interest<?= $i ?>" id="interest<?= $i ?>" required>
+        <label class="form-label mt-2" style="font-family: 'Oswald', serif; font-size: 1.5rem;" for="oprocentowanie<?= $i ?>">Oprocentowanie roczne (%):</label>
+        <input type="number" step="0.01" class="form-control" name="oprocentowanie<?= $i ?>" id="oprocentowanie<?= $i ?>" required>
 
-        <label class="form-label mt-2" for="months<?= $i ?>">Liczba miesięcy:</label>
-        <input type="number" class="form-control" name="months<?= $i ?>" id="months<?= $i ?>" required>
+        <label class="form-label mt-2" style="font-family: 'Oswald', serif; font-size: 1.5rem;" for="liczbaMiesiecy<?= $i ?>">Liczba miesięcy:</label>
+        <input type="number" class="form-control" name="liczbaMiesiecy<?= $i ?>" id="liczbaMiesiecy<?= $i ?>" required>
 
-        <label class="form-label mt-2" for="type<?= $i ?>">Rodzaj rat:</label>
-        <select class="form-select" name="type<?= $i ?>" id="type<?= $i ?>">
-          <option value="annuity">Równe</option>
-          <option value="declining">Malejące</option>
+        <label class="form-label mt-2" style="font-family: 'Oswald', serif; font-size: 1.5rem;" for="rodzajRat<?= $i ?>">Rodzaj rat:</label>
+        <select class="form-select" name="rodzajRat<?= $i ?>" id="rodzajRat<?= $i ?>">
+          <option value="rowne">Równe</option>
+          <option value="malejace">Malejące</option>
         </select>
       </div>
     <?php endfor; ?>
@@ -53,11 +55,11 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const select = document.getElementById("offersCount");
+    const select = document.getElementById("liczba_ofert");
     const updateForm = () => {
       const count = parseInt(select.value);
       for (let i = 1; i <= 4; i++) {
-        const container = document.getElementById(`offer${i}`);
+        const container = document.getElementById(`oferta${i}`);
         if (!container) continue;
         const inputs = container.querySelectorAll("input");
         if (i <= count) {
@@ -76,156 +78,167 @@
 
 <?php
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-  $offersCount = isset($_POST['offersCount']) ? (int)$_POST['offersCount'] : 2;
+  $liczba_ofert = isset($_POST['liczba_ofert']) ? (int)$_POST['liczba_ofert'] : 2;
 
-  function calculateAnnuity($amount, $interest, $months) {
-    $monthlyRate = $interest / 12 / 100;
-    if ($monthlyRate > 0) {
-      return ($amount * $monthlyRate) / (1 - pow(1 + $monthlyRate, -$months));
+  function oblicz_rate_stala($kwota, $oprocentowanie, $liczba_miesiecy) {
+    $miesieczna_stopa = $oprocentowanie / 12 / 100;
+    if ($miesieczna_stopa > 0) {
+      return ($kwota * $miesieczna_stopa) / (1 - pow(1 + $miesieczna_stopa, -$liczba_miesiecy));
     } else {
-      return $amount / $months;
+      return $kwota / $liczba_miesiecy;
     }
   }
 
   // Generowanie harmonogramu dla rat równych
-  function generateAnnuitySchedule($amount, $interest, $months, $rate) {
-    $schedule = [];
-    $remaining = $amount;
-    for ($i = 1; $i <= $months; $i++) {
-      $interestPart = ($remaining * $interest / 100) / 12;
-      $capitalPart = $rate - $interestPart;
-      $schedule[] = [
-        'month' => $i,
-        'payment' => round($rate, 2),
-        'capital' => round($capitalPart, 2),
-        'interest' => round($interestPart, 2),
-        'remaining' => round($remaining, 2)
+  function generuj_harmonogram_staly($kwota, $oprocentowanie, $liczba_miesiecy, $rata) {
+    $lista_rat = [];
+    $pozostalo_do_splaty = $kwota;
+    for ($i = 1; $i <= $liczba_miesiecy; $i++) {
+      $czesc_odsetkowa = ($pozostalo_do_splaty * $oprocentowanie / 100) / 12;
+      $czesc_kapitalowa = $rata - $czesc_odsetkowa;
+      $lista_rat[] = [
+        'miesiac' => $i,
+        'rata' => round($rata, 2),
+        'kapital' => round($czesc_kapitalowa, 2),
+        'odsetki' => round($czesc_odsetkowa, 2),
+        'pozostalo' => round($pozostalo_do_splaty, 2)
       ];
-      $remaining -= $capitalPart;
+      $pozostalo_do_splaty -= $czesc_kapitalowa;
     }
-    return $schedule;
+    return $lista_rat;
   }
 
-  function calculateDecliningTotal($amount, $interest, $months) {
-    $capitalPart = $amount / $months;
-    $total = 0;
-    $remaining = $amount;
-    for ($i = 1; $i <= $months; $i++) {
-      $interestPart = ($remaining * $interest / 100) / 12;
-      $payment = $capitalPart + $interestPart;
-      $total += $payment;
-      $remaining -= $capitalPart;
+  function oblicz_sume_malejaca($kwota, $oprocentowanie, $liczba_miesiecy) {
+    $czesc_kapitalowa = $kwota / $liczba_miesiecy;
+    $suma_splat = 0;
+    $pozostalo_do_splaty = $kwota;
+    for ($i = 1; $i <= $liczba_miesiecy; $i++) {
+      $czesc_odsetkowa = ($pozostalo_do_splaty * $oprocentowanie / 100) / 12;
+      $rata = $czesc_kapitalowa + $czesc_odsetkowa;
+      $suma_splat += $rata;
+      $pozostalo_do_splaty -= $czesc_kapitalowa;
     }
-    return $total;
+    return $suma_splat;
   }
 
-  function generateDecliningSchedule($amount, $interest, $months) {
-    $schedule = [];
-    $capitalPart = $amount / $months;
-    $remaining = $amount;
+  function generuj_harmonogram_malejacy($kwota, $oprocentowanie, $liczba_miesiecy) {
+    $lista_rat = [];
+    $czesc_kapitalowa = $kwota / $liczba_miesiecy;
+    $pozostalo_do_splaty = $kwota;
 
-    for ($i = 1; $i <= $months; $i++) {
-      $interestPart = ($remaining * $interest / 100) / 12;
-      $payment = $capitalPart + $interestPart;
-      $schedule[] = [
-        'month' => $i,
-        'payment' => round($payment, 2),
-        'capital' => round($capitalPart, 2),
-        'interest' => round($interestPart, 2),
-        'remaining' => round($remaining, 2)
+    for ($i = 1; $i <= $liczba_miesiecy; $i++) {
+      $czesc_odsetkowa = ($pozostalo_do_splaty * $oprocentowanie / 100) / 12;
+      $rata = $czesc_kapitalowa + $czesc_odsetkowa;
+      $lista_rat[] = [
+        'miesiac' => $i,
+        'rata' => round($rata, 2),
+        'kapital' => round($czesc_kapitalowa, 2),
+        'odsetki' => round($czesc_odsetkowa, 2),
+        'pozostalo' => round($pozostalo_do_splaty, 2)
       ];
-      $remaining -= $capitalPart;
+      $pozostalo_do_splaty -= $czesc_kapitalowa;
     }
 
-    return $schedule;
+    return $lista_rat;
   }
 
-  $rates = [];
-  $totals = [];
-  $labels = [];
-  $summaryLines = [];
+  $raty_miesieczne = [];
+  $sumy_splat = [];
+  $etykiety_kredytow = [];
+  $linijki_podsumowania = [];
 
   echo "<div class='row mt-4'>";
-  for ($i = 1; $i <= $offersCount; $i++) {
-    $amountKey = "amount$i";
-    $interestKey = "interest$i";
-    $monthsKey = "months$i";
-    $typeKey = "type$i";
+  for ($i = 1; $i <= $liczba_ofert; $i++) {
+    $klucz_kwota = "kwota$i";
+    $klucz_oprocentowanie = "oprocentowanie$i";
+    $klucz_liczba_miesiecy = "liczbaMiesiecy$i";
+    $klucz_rodzaj_rat = "rodzajRat$i";
 
     if (
-      !isset($_POST[$amountKey], $_POST[$interestKey], $_POST[$monthsKey]) ||
-      $_POST[$amountKey] === '' || $_POST[$monthsKey] === ''
+      !isset($_POST[$klucz_kwota], $_POST[$klucz_oprocentowanie], $_POST[$klucz_liczba_miesiecy]) ||
+      $_POST[$klucz_kwota] === '' || $_POST[$klucz_liczba_miesiecy] === ''
     ) {
       echo "<div class='alert alert-danger'>Błąd: Nieprawidłowe dane dla Kredytu $i. Upewnij się, że wszystkie pola są wypełnione.</div>";
       continue;
     }
 
-    $amount = (float) $_POST[$amountKey];
-    $interest = (float) $_POST[$interestKey];
-    $months = (int) $_POST[$monthsKey];
-    $type = $_POST[$typeKey] ?? 'annuity';
+    $kwota = (float) $_POST[$klucz_kwota];
+    $oprocentowanie = (float) $_POST[$klucz_oprocentowanie];
+    $liczba_miesiecy = (int) $_POST[$klucz_liczba_miesiecy];
+    $rodzaj_rat = $_POST[$klucz_rodzaj_rat] ?? 'rowne';
 
-    if ($amount <= 0 || $months <= 0) {
+    if ($kwota <= 0 || $liczba_miesiecy <= 0) {
       echo "<div class='alert alert-danger'>Błąd: Nieprawidłowe dane dla Kredytu $i. Upewnij się, że kwota i liczba miesięcy są większe od zera.</div>";
       continue;
     }
 
-    if ($type === 'declining') {
-      $rate = null;
-      $schedule = generateDecliningSchedule($amount, $interest, $months);
-      $total = array_sum(array_column($schedule, 'payment'));
+    if ($rodzaj_rat === 'malejace') {
+      $rata = null;
+      $lista_rat = generuj_harmonogram_malejacy($kwota, $oprocentowanie, $liczba_miesiecy);
+      $suma_splat = array_sum(array_column($lista_rat, 'rata'));
     } else {
-      $rate = calculateAnnuity($amount, $interest, $months);
-      $total = $rate * $months;
+      $rata = oblicz_rate_stala($kwota, $oprocentowanie, $liczba_miesiecy);
+      $suma_splat = $rata * $liczba_miesiecy;
       // Generowanie harmonogramu rat równych
-      $schedule = generateAnnuitySchedule($amount, $interest, $months, $rate);
+      $lista_rat = generuj_harmonogram_staly($kwota, $oprocentowanie, $liczba_miesiecy, $rata);
     }
 
-    $rates[$i] = $rate;
-    $totals[$i] = $total;
-    $labels[$i] = "Kredyt $i";
+    $raty_miesieczne[$i] = $rata;
+    $sumy_splat[$i] = $suma_splat;
+    $etykiety_kredytow[$i] = "Kredyt $i";
 
-    echo "<div class='col-md-6'><div class='alert alert-secondary'>";
-    echo "<h5>Kredyt $i (" . ($type === 'declining' ? "malejące" : "równe") . ")</h5>";
-    if ($rate !== null) {
-      echo "<p>Rata miesięczna: <strong>" . number_format($rate, 2, ',', ' ') . " zł</strong></p>";
+    echo "<div class='col-md-6'><div class='alert alert-secondary' style='font-family: \"Oswald\", serif; font-size: 1rem;'>";
+    echo "<h5>Kredyt $i (" . ($rodzaj_rat === 'malejace' ? "malejące" : "równe") . ")</h5>";
+    if ($rata !== null) {
+      echo "<p>Rata miesięczna: <strong>" . number_format($rata, 2, ',', ' ') . " zł</strong></p>";
     }
-    echo "<p>Łączna kwota do spłaty: <strong>" . number_format($total, 2, ',', ' ') . " zł</strong></p></div>";
+    echo "<p>Łączna kwota do spłaty: <strong>" . number_format($suma_splat, 2, ',', ' ') . " zł</strong></p></div>";
 
-    if (!empty($schedule)) {
+    if (!empty($lista_rat)) {
       echo "<div class='table-responsive'><table class='table table-sm table-bordered mt-3'>";
-      echo "<thead><tr><th>Miesiąc</th><th>Rata</th><th>Kapitał</th><th>Odsetki</th><th>Pozostało</th></tr></thead><tbody>";
-      foreach ($schedule as $row) {
-        echo "<tr><td>{$row['month']}</td><td>{$row['payment']} zł</td><td>{$row['capital']} zł</td><td>{$row['interest']} zł</td><td>{$row['remaining']} zł</td></tr>";
+      echo "<thead>
+	  <tr  style='font-family: \"Oswald\", serif; font-size: 1rem; text-align: center;'><th>Miesiąc</th>
+	  <th style='font-family: \"Oswald\", serif; font-size: 1rem; text-align: center;'>Rata</th>
+	  <th style='font-family: \"Oswald\", serif; font-size: 1rem; text-align: center;'>Kapitał</th>
+	  <th style='font-family: \"Oswald\", serif; font-size: 1rem; text-align: center;'>Odsetki</th>
+	  <th style='font-family: \"Oswald\", serif; font-size: 1rem; text-align: center;'>Pozostało</th>
+	  </tr></thead><tbody>";
+      foreach ($lista_rat as $row) {
+        echo "<tr>
+		<td style='font-family: \"Oswald\", serif; font-size: 1rem;' >{$row['miesiac']}</td>
+		<td style='font-family: \"Oswald\", serif; font-size: 1rem;'>{$row['rata']} zł</td>
+		<td style='font-family: \"Oswald\", serif; font-size: 1rem;'>{$row['kapital']} zł</td>
+		<td style='font-family: \"Oswald\", serif; font-size: 1rem;'>{$row['odsetki']} zł</td>
+		<td style='font-family: \"Oswald\", serif; font-size: 1rem;'>{$row['pozostalo']} zł</td></tr>";
       }
       echo "</tbody></table></div>";
     }
 
     echo "</div>";
 
-    $summaryLines[] = "Kredyt $i:";
-    $summaryLines[] = "Kwota: " . number_format($amount, 2, ',', ' ') . " zł";
-    $summaryLines[] = "Oprocentowanie: " . number_format($interest, 2, ',', ' ') . " %";
-    $summaryLines[] = "Okres: $months miesięcy";
-    $summaryLines[] = "Rodzaj rat: " . ($type === 'declining' ? 'malejące' : 'równe');
-    if ($rate !== null) {
-      $summaryLines[] = "Rata miesięczna: " . number_format($rate, 2, ',', ' ') . " zł";
+    $linijki_podsumowania[] = "Kredyt $i:";
+    $linijki_podsumowania[] = "Kwota: " . number_format($kwota, 2, ',', ' ') . " zł";
+    $linijki_podsumowania[] = "Oprocentowanie: " . number_format($oprocentowanie, 2, ',', ' ') . " %";
+    $linijki_podsumowania[] = "Okres: $liczba_miesiecy miesięcy";
+    $linijki_podsumowania[] = "Rodzaj rat: " . ($rodzaj_rat === 'malejace' ? 'malejące' : 'równe');
+    if ($rata !== null) {
+      $linijki_podsumowania[] = "Rata miesięczna: " . number_format($rata, 2, ',', ' ') . " zł";
     }
-    $summaryLines[] = "Suma spłat: " . number_format($total, 2, ',', ' ') . " zł";
-    $summaryLines[] = "";
+    $linijki_podsumowania[] = "Suma spłat: " . number_format($suma_splat, 2, ',', ' ') . " zł";
+    $linijki_podsumowania[] = "";
   }
   echo "</div>";
 
-  if (empty($totals)) {
+  if (empty($sumy_splat)) {
     echo "<div class='alert alert-warning text-center'>Brak poprawnych danych do porównania.</div>";
     return;
   }
 
-  $minKey = array_keys($totals, min($totals))[0];
-  $minValue = $totals[$minKey];
+  $minKey = array_keys($sumy_splat, min($sumy_splat))[0];
+  $minValue = $sumy_splat[$minKey];
   $summaryText = "Najkorzystniejszy jest <strong>Kredyt $minKey</strong> o łącznym koszcie " . number_format($minValue, 2, ',', ' ') . " zł.";
 
-  echo "<div class='alert alert-info text-center mt-3'>$summaryText</div>";
+  echo "<div class='alert alert-info text-center mt-3' style='font-family: \"Oswald\", serif; font-size: 2rem;'>$summaryText</div>";
   echo "<div class='mt-4'>";
   echo "<canvas id='comparisonChart' height='100'></canvas>";
   echo "</div>";
@@ -234,7 +247,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   if (!empty($_POST['export'])) {
     $export = $_POST['export'];
 
-    $lines = $summaryLines;
+    $lines = $linijki_podsumowania;
 
     $lines[] = "";
     $lines[] = "Wniosek: " . strip_tags($summaryText);
@@ -248,19 +261,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } elseif ($export === 'csv') {
       $csv = fopen('../exports/porownanie_kredytow.csv', 'w');
       fputcsv($csv, ['Oferta', 'Kwota', 'Oprocentowanie', 'Okres', 'Typ rat', 'Rata', 'Suma']);
-      for ($i = 1; $i <= $offersCount; $i++) {
-        $amount = (float) $_POST["amount$i"];
-        $interest = (float) $_POST["interest$i"];
-        $months = (int) $_POST["months$i"];
-        $type = $_POST["type$i"] ?? 'annuity';
+      for ($i = 1; $i <= $liczba_ofert; $i++) {
+        $kwota = (float) $_POST["kwota$i"];
+        $oprocentowanie = (float) $_POST["oprocentowanie$i"];
+        $liczba_miesiecy = (int) $_POST["liczbaMiesiecy$i"];
+        $rodzaj_rat = $_POST["rodzajRat$i"] ?? 'rowne';
         fputcsv($csv, [
           "Kredyt $i",
-          $amount,
-          $interest,
-          $months,
-          $type,
-          $rates[$i] ?? '',
-          round($totals[$i], 2)
+          $kwota,
+          $oprocentowanie,
+          $liczba_miesiecy,
+          $rodzaj_rat,
+          $raty_miesieczne[$i] ?? '',
+          round($sumy_splat[$i], 2)
         ]);
       }
       fputcsv($csv, []);
@@ -279,36 +292,58 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!-- Renderowanie wykresu Chart.js po przesłaniu formularza -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const ctx = document.getElementById('comparisonChart')?.getContext('2d');
-  if (ctx) {
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: <?= json_encode(array_values($labels)) ?>,
-        datasets: [{
-          label: 'Kwota całkowita do spłaty (zł)',
-          data: <?= json_encode(array_values(array_map(fn($v) => round($v, 2), $totals))) ?>,
-          backgroundColor: ['#0d6efd', '#6c757d', '#198754', '#dc3545']
-        }]
+  const ctx = document.getElementById('comparisonChart').getContext('2d');
+const comparisonChart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: <?= json_encode(array_values($etykiety_kredytow)) ?>,
+    datasets: [{
+      label: 'Kwota całkowita do spłaty (zł)',
+      data: <?= json_encode(array_values(array_map(fn($v) => round($v, 2), $sumy_splat))) ?>,
+      backgroundColor: ['#0d6efd', '#6c757d', '#198754', '#dc3545'],
+      borderRadius: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    animation: {
+      duration: 1000,
+      easing: 'easeOutBounce'
+    },
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: 'Porównanie całkowitych kosztów kredytu'
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          title: {
-            display: true,
-            text: 'Porównanie całkowitych kosztów kredytu'
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: { callback: value => value.toLocaleString('pl-PL') + ' zł' }
-          }
+      tooltip: {
+        callbacks: {
+          label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('pl-PL') + ' zł'
         }
       }
-    });
-  }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: value => value.toLocaleString('pl-PL') + ' zł'
+        }
+      }
+    }
+  },
+  plugins: [{
+    id: 'custom_canvas_background_color',
+    beforeDraw: (chart) => {
+      const ctx = chart.canvas.getContext('2d');
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-over';
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, chart.width, chart.height);
+      ctx.restore();
+    }
+  }]
+});
+  
 </script>
 <?php endif; ?>
 <?php include('../footer.php'); ?>
